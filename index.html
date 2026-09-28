@@ -1224,7 +1224,12 @@
     var heroEl = document.querySelector('.hero');
     var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var lowPower, dpr, W, H, heroH, fade = 0, running = false, t0 = performance.now();
-    var imgs = { day: new Image(), dusk: new Image() };
+    var imgs = { day: new Image(), dusk: new Image() }, patterns = {};
+    // One continuous repeating pattern per image: no tile edges, so no hairline seams
+    var patternFor = function (key) {
+      if (!patterns[key]) patterns[key] = ctx.createPattern(imgs[key], 'repeat');
+      return patterns[key];
+    };
     imgs.day.src = 'clouds-day.webp?v=3'; imgs.dusk.src = 'clouds.webp?v=3';
     // near layer: big, drifts left, rises with scroll; far layer: smaller, drifts right, fainter
     var layers = [
@@ -1240,7 +1245,7 @@
     };
     var draw = function (now) {
       var dark = document.documentElement.getAttribute('data-theme') === 'dark';
-      var img = dark ? imgs.dusk : imgs.day;
+      var key = dark ? 'dusk' : 'day', img = imgs[key];
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.clearRect(0, 0, cv.width, cv.height);
       if (!img.complete || !img.naturalWidth) return;
@@ -1254,7 +1259,10 @@
         var ox = ((t * L.speed * (lowPower ? 0.6 : 1)) % T + T) % T;
         var oy = (((-y * L.par * (lowPower ? 0.5 : 1)) + breathe) % T + T) % T;
         ctx.globalAlpha = strength * L.a;
-        for (var x = -ox; x < W; x += T) for (var yy = -oy; yy < H; yy += T) ctx.drawImage(img, x, yy, T, T);
+        var pat = patternFor(key), k = T / img.naturalWidth;
+        pat.setTransform(new DOMMatrix([k, 0, 0, k, -ox, -oy]));
+        ctx.fillStyle = pat;
+        ctx.fillRect(0, 0, W, H);
       }
       ctx.globalAlpha = 1;
     };
