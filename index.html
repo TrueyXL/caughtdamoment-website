@@ -184,7 +184,7 @@
     transition: background .35s var(--ease), padding .35s var(--ease), border-color .35s var(--ease);
     border-bottom: 1px solid transparent;
   }
-  .nav.scrolled { background: rgba(58, 55, 51, 0.94); backdrop-filter: blur(10px); padding-block: var(--sp-3); border-color: var(--line-on-dark); }
+  .nav.scrolled { background: rgba(58, 55, 51, 0.97); padding-block: var(--sp-3); border-color: var(--line-on-dark); }
   .nav .container { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-6); }
   .nav-logo img { height: 60px; width: auto; opacity: 0.96; margin-left: -29px; }
   @media (min-width: 700px) { .nav-logo img { height: 72px; margin-left: -35px; } }
@@ -244,7 +244,7 @@
     position: fixed; inset: 0; z-index: 200;
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--sp-6);
     padding: var(--sp-6); text-align: center; color: var(--cream);
-    background: rgba(36, 34, 31, 0.62); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    background: rgba(36, 34, 31, 0.72); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
     opacity: 0; visibility: hidden; transition: opacity .8s var(--ease-elegant), visibility 0s linear .8s;
   }
   .intro-gate.is-open { opacity: 1; visibility: visible; transition: opacity .8s var(--ease-elegant); }
@@ -316,38 +316,9 @@
      clouds.webp is a seamless 2048px tile with baked-in light & shadow. */
   :root { --mist-strength: 1; --cloud-img: url(clouds-day.webp?v=3); --sky-tint: rgba(214, 228, 240, 0.55); }
   :root[data-theme="dark"] { --mist-strength: 0.58; --cloud-img: url(clouds.webp?v=3); --sky-tint: transparent; }
-  .mist { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; opacity: 0; transition: opacity .8s var(--ease); }
-  .mist-inner { position: absolute; inset: 0; animation: mistBreathe 16s ease-in-out infinite alternate; }
+  .mist { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; opacity: 0; }
   .mist::before { content: ""; position: absolute; inset: 0; background: var(--sky-tint); transition: background .5s var(--ease); }
-  .mist-layer { position: absolute; left: 0; top: 0; width: 100%; will-change: transform; }
-  .mist-sheet {
-    position: absolute; left: 0; top: 0;
-    background-image: var(--cloud-img); background-repeat: repeat;
-    width: calc(100% + var(--t)); height: calc(100vh + var(--t)); background-size: var(--t) var(--t);
-    will-change: transform;
-  }
-  /* near layer: full size, fastest; far layers smaller, slower and fainter */
-  .m1 .mist-sheet { --t: 2048px; animation: mistDrift1 58s linear infinite; }
-  .m2 .mist-sheet { --t: 1400px; animation: mistDrift2 92s linear infinite; }
-  .m3 .mist-sheet { --t: 1000px; animation: mistDrift3 80s linear infinite; }
-  .m1 { opacity: var(--mist-strength); }
-  .m2 { opacity: calc(var(--mist-strength) * 0.5); }
-  .m3 { display: none; }
-  @keyframes mistDrift1 { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(-2048px, 0, 0); } }
-  @keyframes mistDrift2 { from { transform: translate3d(-1400px, 0, 0); } to { transform: translate3d(0, 0, 0); } }
-  @keyframes mistDrift3 { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(-1000px, 0, 0); } }
-  @keyframes mistBreathe { from { transform: translate3d(0, 1.2%, 0); opacity: .85; } to { transform: translate3d(0, -1.2%, 0); opacity: 1; } }
-  /* Phones & tablets: one lightweight cloud layer. The sheet is only one screen tall
-     (no vertical parallax on touch), so the GPU layer stays small even on 3x screens. */
-  @media (max-width: 900px), (pointer: coarse) {
-    .mist-inner { animation: none; }
-    .m2, .m3 { display: none; }
-    .m1 .mist-sheet { --t: 640px; width: calc(100% + 640px); height: 100%; animation: mistDrift1m 44s linear infinite; }
-    .mist-layer { height: 100%; }
-    @keyframes mistDrift1m { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(-640px, 0, 0); } }
-  }
-
-  @media (prefers-reduced-motion: reduce) { .mist-sheet, .mist-inner { animation: none; } }
+  .mist-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
   main, footer { position: relative; z-index: 1; }
 
   /* Language toggle */
@@ -400,7 +371,7 @@
     position: absolute; left: var(--sp-6); bottom: var(--sp-8); z-index: 3;
     display: flex; align-items: center; gap: var(--sp-4);
     padding: 8px 16px 8px 10px; border-radius: 999px;
-    background: rgba(40, 38, 35, 0.38); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    background: rgba(40, 38, 35, 0.6);
     border: 1px solid var(--line-on-dark); color: var(--cream);
   }
   @media (min-width: 1024px) { .hero-sound { left: var(--sp-12); } }
@@ -620,8 +591,8 @@
   @media (min-width: 800px) { .footer-bottom { flex-direction: row; justify-content: space-between; } }
 
   /* Reveal on scroll */
-  .reveal { opacity: 0; transform: translateY(56px) scale(0.97); filter: blur(12px); transition: opacity 1.3s var(--ease-elegant), transform 1.3s var(--ease-elegant), filter 1.3s var(--ease-elegant); }
-  .reveal.is-visible { opacity: 1; transform: none; filter: blur(0); }
+  .reveal { opacity: 0; transform: translateY(40px); transition: opacity 1.1s var(--ease-elegant), transform 1.1s var(--ease-elegant); }
+  .reveal.is-visible { opacity: 1; transform: none; }
 
   .team-card:nth-child(1) { transition-delay: 0s; }
   .team-card:nth-child(2) { transition-delay: .12s; }
@@ -654,8 +625,8 @@
   }
 
   .reveal-text > .eyebrow, .reveal-text > h2, .reveal-text > p {
-    opacity: 0; transform: translateY(40px); filter: blur(9px);
-    transition: opacity 1s var(--ease-elegant), transform 1s var(--ease-elegant), filter 1s var(--ease-elegant);
+    opacity: 0; transform: translateY(28px);
+    transition: opacity 1s var(--ease-elegant), transform 1s var(--ease-elegant);
   }
   .reveal-text.is-visible > .eyebrow { transition-delay: 0s; }
   .reveal-text.is-visible > h2 { transition-delay: .15s; }
@@ -667,7 +638,7 @@
   .reveal-text.is-visible > .eyebrow,
   .reveal-text.is-visible > h2,
   .reveal-text.is-visible > p {
-    opacity: 1; transform: none; filter: blur(0);
+    opacity: 1; transform: none;
   }
   html:not(.js) .reveal-text > * { opacity: 1; transform: none; filter: blur(0); }
 </style>
@@ -744,7 +715,7 @@
   <a href="#contact">Contact</a>
 </div>
 
-<div class="mist" id="mist" aria-hidden="true"><div class="mist-inner"><div class="mist-layer m2" data-speed="0.30" data-tile="1400"><div class="mist-sheet"></div></div><div class="mist-layer m1" data-speed="0.45" data-tile="2048"><div class="mist-sheet"></div></div><div class="mist-layer m3" data-speed="0.18" data-tile="1000"><div class="mist-sheet"></div></div></div></div>
+<div class="mist" id="mist" aria-hidden="true"><canvas class="mist-canvas" id="mistCanvas"></canvas></div>
 
 <main id="main">
   <!-- ============================= HERO ============================= -->
@@ -754,6 +725,7 @@
         <source src="hero-4k.mp4" type="video/mp4" media="(min-width: 1281px)" />
         <source src="hero-1080.mp4" type="video/mp4" />
       </video>
+      <audio id="heroAudio" src="hero-audio.m4a" loop preload="auto"></audio>
     </div>
     <div class="hero-sound" id="heroSound">
       <button type="button" class="hero-sound-btn" id="heroSoundBtn" aria-pressed="false" aria-label="Turn sound on">
@@ -1243,46 +1215,84 @@
   document.addEventListener('scroll', onScroll, { passive: true });
   onScroll();
 
-  // Mist fades in as the opening video scrolls away
-  var mist = document.getElementById('mist');
-  var heroEl = document.querySelector('.hero');
-  var lowPower = window.matchMedia('(max-width: 900px), (pointer: coarse)').matches;
-  var mistLayers = [], heroH = 0, lastOpacity = -1;
-  var measureMist = function () {
-    lowPower = window.matchMedia('(max-width: 900px), (pointer: coarse)').matches;
-    heroH = heroEl.offsetHeight || window.innerHeight;
-    // read tile sizes once (not on every scroll) — style reads during scroll cause jank
-    mistLayers = Array.prototype.slice.call(mist.querySelectorAll('.mist-layer')).map(function (l) {
-      var tile = parseFloat(getComputedStyle(l.firstElementChild).getPropertyValue('--t')) || +l.getAttribute('data-tile');
-      return { el: l, tile: tile, speed: +l.getAttribute('data-speed') };
-    });
-  };
-  var paintMist = function () {
-    var y = window.scrollY;
-    var k = Math.min(Math.max((y - heroH * 0.3) / (heroH * 0.5), 0), 1);
-    var o = Math.round(k * 100) / 100;
-    if (o !== lastOpacity) { mist.style.opacity = o; lastOpacity = o; }
-    if (lowPower || o === 0) return;          // phones: clouds drift, no scroll parallax
-    // parallax: each layer rises at its own speed as you scroll (wraps seamlessly on the tile)
-    for (var i = 0; i < mistLayers.length; i++) {
-      var L = mistLayers[i];
-      L.el.style.transform = 'translate3d(0,' + (-((y * L.speed) % L.tile)).toFixed(1) + 'px,0)';
-    }
-  };
-  measureMist();
-  document.addEventListener('scroll', paintMist, { passive: true });
-  window.addEventListener('resize', function () { measureMist(); paintMist(); });
-  paintMist();
+  // ---------- Clouds: drawn on one screen-sized canvas ----------
+  // Two layers of a seamless 2048px cloud tile drift sideways and rise with the scroll.
+  // One small canvas is far lighter than moving giant image layers, on every device.
+  (function () {
+    var mist = document.getElementById('mist'), cv = document.getElementById('mistCanvas');
+    var ctx = cv.getContext('2d', { alpha: true });
+    var heroEl = document.querySelector('.hero');
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var lowPower, dpr, W, H, heroH, fade = 0, running = false, t0 = performance.now();
+    var imgs = { day: new Image(), dusk: new Image() };
+    imgs.day.src = 'clouds-day.webp?v=3'; imgs.dusk.src = 'clouds.webp?v=3';
+    // near layer: big, drifts left, rises with scroll; far layer: smaller, drifts right, fainter
+    var layers = [
+      { tile: 2048, speed: -34, par: 0.42, a: 1 },
+      { tile: 1400, speed: 15, par: 0.26, a: 0.5 }
+    ];
+    var size = function () {
+      lowPower = window.matchMedia('(max-width: 900px), (pointer: coarse)').matches;
+      dpr = Math.min(window.devicePixelRatio || 1, lowPower ? 1 : 1.25);   // clouds are soft: no need for full retina
+      W = window.innerWidth; H = window.innerHeight;
+      cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+      heroH = heroEl.offsetHeight || H;
+    };
+    var draw = function (now) {
+      var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+      var img = dark ? imgs.dusk : imgs.day;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, cv.width, cv.height);
+      if (!img.complete || !img.naturalWidth) return;
+      var strength = dark ? 0.58 : 1;
+      var t = reduce ? 0 : (now - t0) / 1000, y = window.scrollY;
+      var breathe = reduce ? 0 : Math.sin(t / 16 * Math.PI) * 0.012 * H;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      var n = lowPower ? 1 : layers.length;
+      for (var i = 0; i < n; i++) {
+        var L = layers[i], T = lowPower ? 900 : L.tile;
+        var ox = ((t * L.speed * (lowPower ? 0.6 : 1)) % T + T) % T;
+        var oy = (((-y * L.par * (lowPower ? 0.5 : 1)) + breathe) % T + T) % T;
+        ctx.globalAlpha = strength * L.a;
+        for (var x = -ox; x < W; x += T) for (var yy = -oy; yy < H; yy += T) ctx.drawImage(img, x, yy, T, T);
+      }
+      ctx.globalAlpha = 1;
+    };
+    var loop = function (now) {
+      if (fade <= 0 || document.hidden) { running = false; return; }   // idle while hidden behind the video
+      draw(now);
+      if (reduce) { running = false; return; }
+      requestAnimationFrame(loop);
+    };
+    var kick = function () { if (!running && fade > 0) { running = true; requestAnimationFrame(loop); } };
+    var onScrollMist = function () {
+      var y = window.scrollY;
+      var k = Math.min(Math.max((y - heroH * 0.3) / (heroH * 0.5), 0), 1);
+      k = Math.round(k * 100) / 100;
+      if (k !== fade) { fade = k; mist.style.opacity = k; }
+      if (reduce && k > 0) draw(performance.now());
+      kick();
+    };
+    size();
+    imgs.day.onload = imgs.dusk.onload = function () { if (fade > 0) draw(performance.now()); };
+    document.addEventListener('scroll', onScrollMist, { passive: true });
+    window.addEventListener('resize', function () { size(); onScrollMist(); if (fade > 0) draw(performance.now()); });
+    document.addEventListener('visibilitychange', kick);
+    document.getElementById('themeToggle').addEventListener('click', function () { if (fade > 0) draw(performance.now()); });
+    onScrollMist();
+  })();
 
   // Hero video sound toggle + volume
   var heroVideo = document.getElementById('heroVideo');
+  // The film's sound plays from its own audio track, so the 4K picture can pause off screen
+  var heroAudio = document.getElementById('heroAudio');
   var heroSound = document.getElementById('heroSound');
   var soundBtn = document.getElementById('heroSoundBtn');
   var volume = document.getElementById('heroVolume');
   var soundLabel = heroSound.querySelector('.hero-sound-label');
   // Hero volume = the level the visitor chose x 60% once they start scrolling.
   var baseVol = parseFloat(volume.value), scrollGain = 1, scrollTarget = 1, gainRAF = null;
-  var applyVol = function () { heroVideo.volume = Math.max(0, Math.min(1, baseVol * scrollGain)); };
+  var applyVol = function () { heroAudio.volume = Math.max(0, Math.min(1, baseVol * scrollGain)); };
   var rampGain = function () {
     scrollGain += (scrollTarget - scrollGain) * 0.12;
     if (Math.abs(scrollTarget - scrollGain) < 0.005) { scrollGain = scrollTarget; gainRAF = null; }
@@ -1296,15 +1306,15 @@
   applyVol();
   var heroDucked = false;   // true while a portfolio preview is playing its own sound
   var setSound = function (on) {
-    heroVideo.muted = !on;
+    heroAudio.muted = !on;
     if (on && baseVol === 0) { baseVol = 0.2; volume.value = 0.2; applyVol(); }
     heroSound.classList.toggle('is-on', on);
     soundBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
     soundBtn.setAttribute('aria-label', on ? t('turnOff') : t('turnOn'));
     soundLabel.textContent = on ? t('soundOn') : t('soundOff');
-    if (on) { var pl = heroVideo.play(); if (pl && pl.catch) pl.catch(function () {}); }
+    if (on && heroAudio.paused) { var pl = heroAudio.play(); if (pl && pl.catch) pl.catch(function () {}); }
   };
-  soundBtn.addEventListener('click', function () { setSound(heroVideo.muted); });
+  soundBtn.addEventListener('click', function () { setSound(heroAudio.muted); });
   volume.addEventListener('input', function () {
     baseVol = parseFloat(volume.value);
     applyVol();
@@ -1343,11 +1353,29 @@
     langToggle.textContent = t('toggle');
     if (typeof syncTheme === 'function') syncTheme();
     langToggle.setAttribute('aria-label', t('toggleLabel'));
-    setSound(!heroVideo.muted);
+    setSound(!heroAudio.muted);
     if (!submitBtn.disabled) submitBtn.textContent = t('send');
     try { localStorage.setItem('cdm-lang', lang); } catch (e) {}
   };
   langToggle.addEventListener('click', function () { applyLang(lang === 'fr' ? 'en' : 'fr'); });
+
+  // Pause the opening film while it's scrolled out of view and silent (saves decoding 4K frames)
+  if ('IntersectionObserver' in window) {
+    var heroOnScreen = true;
+    new IntersectionObserver(function (en) {
+      heroOnScreen = en[0].isIntersecting;
+      if (!heroOnScreen) { heroVideo.pause(); return; }
+      if (!heroAudio.paused && heroVideo.duration) heroVideo.currentTime = heroAudio.currentTime % heroVideo.duration;
+      if (heroVideo.paused) { var pp = heroVideo.play(); if (pp && pp.catch) pp.catch(function () {}); }
+    }, { threshold: 0 }).observe(document.querySelector('.hero'));
+    // keep picture and sound together while both are playing
+    heroVideo.addEventListener('timeupdate', function () {
+      if (heroAudio.paused || !heroVideo.duration) return;
+      var d = Math.abs(heroVideo.currentTime - heroAudio.currentTime);
+      d = Math.min(d, heroVideo.duration - d);            // ignore the loop seam
+      if (d > 0.2) heroVideo.currentTime = heroAudio.currentTime % heroVideo.duration;
+    });
+  }
 
   // ---------- Light / dark mode ----------
   var themeToggle = document.getElementById('themeToggle');
@@ -1433,7 +1461,7 @@
       applyLang(b.getAttribute('data-lang'));
       introGate.classList.remove('is-open');
       document.body.style.overflow = '';
-      heroVideo.currentTime = 0;
+      heroVideo.currentTime = 0; heroAudio.currentTime = 0;
       setSound(true);
       setTimeout(function () {
         introGate.hidden = true;
@@ -1455,8 +1483,11 @@
       dot.style.transform = 'translate3d(' + mx + 'px,' + my + 'px,0)';
     }, { passive: true });
     (function follow() {
-      cx += (mx - cx) * 0.18; cy += (my - cy) * 0.18;
-      cam.style.transform = 'translate3d(' + cx.toFixed(1) + 'px,' + cy.toFixed(1) + 'px,0)';
+      var dx = mx - cx, dy = my - cy;
+      if (Math.abs(dx) > 0.1 || Math.abs(dy) > 0.1) {
+        cx += dx * 0.18; cy += dy * 0.18;
+        cam.style.transform = 'translate3d(' + cx.toFixed(1) + 'px,' + cy.toFixed(1) + 'px,0)';
+      }
       requestAnimationFrame(follow);
     })();
     var last = null;
@@ -1500,7 +1531,7 @@
       vid.currentTime = 0;
       vid.muted = false; vid.volume = 0.7;
       // silence the opening film while this one speaks
-      if (!heroVideo.muted) { heroDucked = true; heroVideo.muted = true; }
+      if (!heroAudio.muted) { heroDucked = true; heroAudio.muted = true; }
       var pl = vid.play();
       if (pl && pl.then) pl.then(function () { card.classList.add('is-previewing'); })
         .catch(function () { vid.muted = true; start(); });
@@ -1510,7 +1541,7 @@
       stop();
       vid.muted = true;
       setTimeout(function () {
-        if (heroDucked && !document.querySelector('.film-facade.is-previewing')) { heroDucked = false; heroVideo.muted = false; }
+        if (heroDucked && !document.querySelector('.film-facade.is-previewing')) { heroDucked = false; heroAudio.muted = false; }
       }, 120);
     };
     if (canHover) {
