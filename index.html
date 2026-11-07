@@ -1138,7 +1138,7 @@
         <div class="form-foot">
           <button type="submit" class="btn btn--dark" data-fr="Envoyer la demande">Send Inquiry</button>
         </div>
-        <p id="inquiryError" role="alert" hidden style="font-size:14px; color:#9A5B4F;" data-fr="Notre formulaire a un souci en ce moment. &lt;a href=&quot;mailto:caughtdamoment@gmail.com&quot; class=&quot;text-link mail-fallback&quot; style=&quot;text-transform:none; letter-spacing:0; cursor:pointer;&quot;&gt;Cliquez ici pour envoyer votre demande par courriel&lt;/a&gt;. Tout ce que vous avez écrit sera déjà rempli.">Our form is having trouble right now. <a href="mailto:caughtdamoment@gmail.com" class="text-link mail-fallback" style="text-transform:none; letter-spacing:0; cursor:pointer;">Click here to send your inquiry by email</a>. Everything you typed will already be filled in.</p>
+        <p id="inquiryError" role="alert" hidden style="font-size:14px; color:#9A5B4F;" data-fr="Notre formulaire n&#x27;a pas pu envoyer — veuillez nous écrire par courriel (tout ce que vous avez écrit est déjà rempli) : &lt;a href=&quot;https://mail.google.com/mail/?view=cm&amp;amp;to=caughtdamoment@gmail.com&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot; class=&quot;text-link mail-fallback&quot; data-kind=&quot;gmail&quot; style=&quot;text-transform:none; letter-spacing:0; cursor:pointer;&quot;&gt;Ouvrir dans Gmail&lt;/a&gt; · &lt;a href=&quot;mailto:caughtdamoment@gmail.com&quot; class=&quot;text-link mail-fallback&quot; data-kind=&quot;mailto&quot; style=&quot;text-transform:none; letter-spacing:0; cursor:pointer;&quot;&gt;Ouvrir mon application courriel&lt;/a&gt;">Our form couldn't send right now — please send your inquiry by email instead (everything you typed is already filled in): <a href="https://mail.google.com/mail/?view=cm&amp;to=caughtdamoment@gmail.com" target="_blank" rel="noopener" class="text-link mail-fallback" data-kind="gmail" style="text-transform:none; letter-spacing:0; cursor:pointer;">Open in Gmail</a> · <a href="mailto:caughtdamoment@gmail.com" class="text-link mail-fallback" data-kind="mailto" style="text-transform:none; letter-spacing:0; cursor:pointer;">Open my email app</a></p>
         <p style="font-size:13px; color:var(--muted);" data-fr="Vous préférez nous écrire directement? &lt;a href=&quot;mailto:caughtdamoment@gmail.com&quot; class=&quot;text-link&quot;&gt;caughtdamoment@gmail.com&lt;/a&gt;">Prefer to write directly? <a href="mailto:caughtdamoment@gmail.com" class="text-link">caughtdamoment@gmail.com</a></p>
       </form>
 
@@ -1587,7 +1587,9 @@
     });
   });
 
-  // Inquiry form → sent by email via FormSubmit (https://formsubmit.co)
+  // Inquiry form → sent by email. Web3Forms first (https://web3forms.com, key tied to caughtdamoment@gmail.com),
+  // then FormSubmit as a backup, then a pre-filled Gmail / mail-app fallback for the visitor.
+  var WEB3FORMS_KEY = ''; // [EDIT:FORMKEY] paste the Web3Forms access key here
   var form = document.getElementById('inquiryForm');
   var submitBtn = form.querySelector('button[type="submit"]');
   var formError = document.getElementById('inquiryError');
@@ -1618,17 +1620,37 @@
     submitBtn.textContent = t('sending');
     formError.hidden = true;
 
-    var ctrl = window.AbortController ? new AbortController() : null;
-    var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 15000) : null;
-    fetch('https://formsubmit.co/ajax/caughtdamoment@gmail.com', {
-      method: 'POST',
-      signal: ctrl ? ctrl.signal : undefined,
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify(payload)
-    })
-      .then(function (res) { return res.json().then(function (j) { if (!res.ok || String(j.success) !== 'true') throw new Error(j.message || 'Send failed'); }); })
+    var w3 = {};
+    Object.keys(payload).forEach(function (k) { if (k.charAt(0) !== '_') w3[k] = payload[k]; });
+    w3.access_key = WEB3FORMS_KEY;
+    w3.subject = payload._subject;
+    w3.from_name = 'CaughtDaMoment Website';
+    w3.replyto = payload._replyto;
+    var services = [];
+    if (WEB3FORMS_KEY) services.push({ url: 'https://api.web3forms.com/submit', body: w3 });
+    services.push({ url: 'https://formsubmit.co/ajax/caughtdamoment@gmail.com', body: payload });
+
+    var post = function (svc) {
+      var ctrl = window.AbortController ? new AbortController() : null;
+      var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 12000) : null;
+      return fetch(svc.url, {
+        method: 'POST',
+        signal: ctrl ? ctrl.signal : undefined,
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify(svc.body)
+      }).then(function (res) {
+        return res.json().then(function (j) {
+          if (timer) clearTimeout(timer);
+          if (!res.ok || String(j.success) !== 'true') throw new Error(j.message || 'Send failed');
+        });
+      }, function (err) { if (timer) clearTimeout(timer); throw err; });
+    };
+    var attempt = services.reduce(function (chain, svc) {
+      return chain.catch(function () { return post(svc); });
+    }, Promise.reject(new Error('start')));
+
+    attempt
       .then(function () {
-        if (timer) clearTimeout(timer);
         form.hidden = true;
         var success = document.getElementById('inquirySuccess');
         success.classList.add('is-active');
@@ -1638,8 +1660,8 @@
         success.scrollIntoView({ behavior: 'smooth', block: 'center' });
       })
       .catch(function () {
-        if (timer) clearTimeout(timer);
         formError.hidden = false;
+        formError.scrollIntoView({ behavior: 'smooth', block: 'center' });
         submitBtn.disabled = false;
         submitBtn.textContent = t('send');
       });
@@ -1663,9 +1685,11 @@
       '',
       g('message')
     ];
-    a.href = 'mailto:caughtdamoment@gmail.com?subject=' +
-      encodeURIComponent((fr ? 'Demande de mariage — ' : 'Wedding Inquiry — ') + (g('name') || '')) +
-      '&body=' + encodeURIComponent(lines.join('\n'));
+    var subj = encodeURIComponent((fr ? 'Demande de mariage — ' : 'Wedding Inquiry — ') + (g('name') || ''));
+    var body = encodeURIComponent(lines.join('\n'));
+    a.href = a.getAttribute('data-kind') === 'gmail'
+      ? 'https://mail.google.com/mail/?view=cm&fs=1&to=caughtdamoment@gmail.com&su=' + subj + '&body=' + body
+      : 'mailto:caughtdamoment@gmail.com?subject=' + subj + '&body=' + body;
   });
 
   // Scroll reveal
