@@ -1135,7 +1135,7 @@
         <div class="form-foot">
           <button type="submit" class="btn btn--dark" data-fr="Envoyer la demande">Send Inquiry</button>
         </div>
-        <p id="inquiryError" role="alert" hidden style="font-size:14px; color:#9A5B4F;" data-fr="Désolé — votre demande n&#x27;a pas pu être envoyée. Veuillez réessayer ou nous écrire directement à &lt;a href=&quot;mailto:caughtdamoment@gmail.com&quot; class=&quot;text-link&quot; style=&quot;text-transform:none; letter-spacing:0;&quot;&gt;caughtdamoment@gmail.com&lt;/a&gt;.">Sorry — your inquiry couldn't be sent. Please try again, or email us directly at <a href="mailto:caughtdamoment@gmail.com" class="text-link" style="text-transform:none; letter-spacing:0;">caughtdamoment@gmail.com</a>.</p>
+        <p id="inquiryError" role="alert" hidden style="font-size:14px; color:#9A5B4F;" data-fr="Notre formulaire a un souci en ce moment. &lt;a href=&quot;mailto:caughtdamoment@gmail.com&quot; class=&quot;text-link mail-fallback&quot; style=&quot;text-transform:none; letter-spacing:0; cursor:pointer;&quot;&gt;Cliquez ici pour envoyer votre demande par courriel&lt;/a&gt;. Tout ce que vous avez écrit sera déjà rempli.">Our form is having trouble right now. <a href="mailto:caughtdamoment@gmail.com" class="text-link mail-fallback" style="text-transform:none; letter-spacing:0; cursor:pointer;">Click here to send your inquiry by email</a>. Everything you typed will already be filled in.</p>
         <p style="font-size:13px; color:var(--muted);" data-fr="Vous préférez nous écrire directement? &lt;a href=&quot;mailto:caughtdamoment@gmail.com&quot; class=&quot;text-link&quot;&gt;caughtdamoment@gmail.com&lt;/a&gt;">Prefer to write directly? <a href="mailto:caughtdamoment@gmail.com" class="text-link">caughtdamoment@gmail.com</a></p>
       </form>
 
@@ -1611,13 +1611,17 @@
     submitBtn.textContent = t('sending');
     formError.hidden = true;
 
+    var ctrl = window.AbortController ? new AbortController() : null;
+    var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 15000) : null;
     fetch('https://formsubmit.co/ajax/caughtdamoment@gmail.com', {
       method: 'POST',
+      signal: ctrl ? ctrl.signal : undefined,
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
       body: JSON.stringify(payload)
     })
       .then(function (res) { return res.json().then(function (j) { if (!res.ok || String(j.success) !== 'true') throw new Error(j.message || 'Send failed'); }); })
       .then(function () {
+        if (timer) clearTimeout(timer);
         form.hidden = true;
         var success = document.getElementById('inquirySuccess');
         success.classList.add('is-active');
@@ -1627,10 +1631,34 @@
         success.scrollIntoView({ behavior: 'smooth', block: 'center' });
       })
       .catch(function () {
+        if (timer) clearTimeout(timer);
         formError.hidden = false;
         submitBtn.disabled = false;
         submitBtn.textContent = t('send');
       });
+  });
+
+  // Fallback: if the form service is down, open the visitor's email app with the inquiry pre-filled
+  formError.addEventListener('click', function (e) {
+    var a = e.target.closest('.mail-fallback');
+    if (!a) return;
+    var d = new FormData(form);
+    var g = function (k) { return (d.get(k) || '').toString().trim(); };
+    var fr = lang === 'fr';
+    var lines = [
+      (fr ? 'Nom' : 'Name') + ': ' + g('name'),
+      (fr ? 'Courriel' : 'Email') + ': ' + g('email'),
+      (fr ? 'Date du mariage' : 'Wedding Date') + ': ' + (g('date') || '-'),
+      (fr ? 'Lieu' : 'Venue / Location') + ': ' + (g('venue') || '-'),
+      (fr ? 'Téléphone' : 'Phone') + ': ' + (g('phone') || '-'),
+      (fr ? 'Invités' : 'Estimated Guests') + ': ' + (g('guests') || '-'),
+      (fr ? 'Forfait' : 'Package') + ': ' + (g('package') || '-'),
+      '',
+      g('message')
+    ];
+    a.href = 'mailto:caughtdamoment@gmail.com?subject=' +
+      encodeURIComponent((fr ? 'Demande de mariage — ' : 'Wedding Inquiry — ') + (g('name') || '')) +
+      '&body=' + encodeURIComponent(lines.join('\n'));
   });
 
   // Scroll reveal
